@@ -24,35 +24,28 @@ jobs:
           name: libthaiidcard-linux-amd64
           path: target/x86_64-unknown-linux-gnu/release/libthaiidcard.so
 
-  build-mac-arm64:
-    name: macOS .dylib (ARM64)
+  build-mac:
+    name: macOS .dylib (Universal)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: aarch64-apple-darwin
+          targets: aarch64-apple-darwin x86_64-apple-darwin
       - run: cargo build --release --lib --target aarch64-apple-darwin
-      - uses: actions/upload-artifact@v4
-        with:
-          name: libthaiidcard-macos-arm64
-          path: target/aarch64-apple-darwin/release/libthaiidcard.dylib
-
-  build-mac-x64:
-    name: macOS .dylib (x86_64)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          targets: x86_64-apple-darwin
       - run: cargo build --release --lib --target x86_64-apple-darwin
+      - name: Create universal binary
+        run: |
+          mkdir -p universal
+          lipo -create \
+            target/aarch64-apple-darwin/release/libthaiidcard.dylib \
+            target/x86_64-apple-darwin/release/libthaiidcard.dylib \
+            -output universal/libthaiidcard.dylib
       - uses: actions/upload-artifact@v4
         with:
-          name: libthaiidcard-macos-x86_64
-          path: target/x86_64-apple-darwin/release/libthaiidcard.dylib
+          name: libthaiidcard-macos-universal
+          path: universal/libthaiidcard.dylib
 
   build-windows:
     name: Windows .dll
@@ -73,8 +66,7 @@ jobs:
     name: Create Release
     needs:
       - build-linux
-      - build-mac-arm64
-      - build-mac-x64
+      - build-mac
       - build-windows
     runs-on: ubuntu-latest
     permissions:
@@ -84,9 +76,9 @@ jobs:
       - run: |
           mkdir artifacts
           cp libthaiidcard-linux-amd64/* artifacts/
-          cp libthaiidcard-macos-arm64/* artifacts/
-          cp libthaiidcard-macos-x86_64/* artifacts/
+          cp libthaiidcard-macos-universal/* artifacts/
           cp thaiidcard-windows-amd64/* artifacts/
+          ls -lh artifacts/
       - uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
