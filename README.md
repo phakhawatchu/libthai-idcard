@@ -5,6 +5,7 @@
 [![Crates.io](https://img.shields.io/crates/v/libthai-idcard)](https://crates.io/crates/libthai-idcard)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](https://github.com/phakhawatchu/libthai-idcard)
 [![CI](https://github.com/phakhawatchu/libthai-idcard/actions/workflows/ci.yml/badge.svg)](https://github.com/phakhawatchu/libthai-idcard/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/phakhawatchu/libthai-idcard?logo=github)](https://github.com/phakhawatchu/libthai-idcard/releases/latest)
 [![MSRV](https://img.shields.io/badge/rustc-1.81%2B-lightgrey)](https://github.com/phakhawatchu/libthai-idcard)
 
 A Rust library for reading **Thai National ID smart cards** via PC/SC
@@ -153,6 +154,13 @@ make python-example
 # Run the Ruby example
 make ruby-example
 ```
+
+### Pre-built Binaries
+
+Pre-built shared libraries for Linux (.so), macOS (.dylib), and Windows (.dll)
+are available on the [GitHub Releases page](https://github.com/phakhawatchu/libthai-idcard/releases/latest).
+
+Simply download the archive for your platform and extract the library.
 
 ### Cross-compilation
 
