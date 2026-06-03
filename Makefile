@@ -35,7 +35,7 @@ test: ## Run all tests
 ##@ C FFI
 
 .PHONY: shared
-shared: ## Build the native shared library (.dylib/.so)
+shared: ## Build the native shared library (.dylib/.so/.dll)
 	cargo build --lib
 
 .PHONY: headers
@@ -93,7 +93,7 @@ build-win-native-release: ## Build Windows DLL natively in release mode
 
 .PHONY: c-example
 c-example: shared ## Build and run the C usage example
-	cc -o /tmp/thaiid-c-example examples/c_usage.c -ldl
+	cc -o /tmp/thaiid-c-example examples/c_usage.c $(shell uname -s | grep -q Linux && echo "-ldl")
 	/tmp/thaiid-c-example
 
 .PHONY: c-example-link
