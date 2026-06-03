@@ -1,3 +1,5 @@
+> **🌐 Language:** English · [ไทย](README.th.md)
+
 # libthai-idcard
 
 [![Crates.io](https://img.shields.io/crates/v/libthai-idcard)](https://crates.io/crates/libthai-idcard)
@@ -241,6 +243,7 @@ CardData
 ## References
 
 - [Thai National ID Card APDU Specification](https://github.com/chakphanu/ThaiNationalIDCard/blob/master/APDU.md)
+- [go-thai-smartcard NHSO APDU Implementation](https://github.com/somprasongd/go-thai-smartcard/blob/main/pkg/apdu/nhso.go)
 
 ## License
 
