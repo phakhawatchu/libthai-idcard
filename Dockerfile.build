@@ -93,4 +93,4 @@ RUN case "$TARGET" in \
 WORKDIR /build
 COPY . .
 
-CMD ["sh", "-c", ". /build-env.sh 2>/dev/null; cargo build --release --lib --target \"$TARGET\""]
+CMD ["sh", "-c", ". /build-env.sh 2>/dev/null; rustup target add \"$TARGET\" 2>&1; cargo build --release --lib --target \"$TARGET\""]
