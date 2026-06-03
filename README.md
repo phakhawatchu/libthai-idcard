@@ -157,10 +157,18 @@ make ruby-example
 
 ### Pre-built Binaries
 
-Pre-built shared libraries for Linux (.so), macOS (.dylib), and Windows (.dll)
-are available on the [GitHub Releases page](https://github.com/phakhawatchu/libthai-idcard/releases/latest).
+Pre-built shared libraries are available on the
+[GitHub Releases page](https://github.com/phakhawatchu/libthai-idcard/releases/latest)
+for the following platforms:
 
-Simply download the archive for your platform and extract the library.
+| Platform | Architecture          | File                               |
+| -------- | --------------------- | ---------------------------------- |
+| Linux    | x86_64                | `libthaiidcard-linux-x86_64.so`    |
+| Linux    | ARM64                 | `libthaiidcard-linux-arm64.so`     |
+| macOS    | x86_64 (Intel)        | `libthaiidcard-macos-x86_64.dylib` |
+| macOS    | ARM64 (Apple Silicon) | `libthaiidcard-macos-arm64.dylib`  |
+| Windows  | x86_64                | `thaiidcard-windows-x86_64.dll`    |
+| Windows  | ARM64                 | `thaiidcard-windows-arm64.dll`     |
 
 ### Cross-compilation
 
@@ -169,24 +177,31 @@ require a locally installed mingw-w64). macOS builds use **osxcross** to
 provide the Apple SDK and toolchain inside the Linux-based Docker image.
 
 ```bash
-# Build Linux .so via Docker
+# Build Linux .so via Docker (x86_64)
 make build-linux
 
-# Build macOS .dylib via Docker using osxcross (Apple Silicon)
-make build-mac
+# Build Linux .so via Docker (ARM64)
+make build-linux-arm64
 
 # Build macOS .dylib via Docker using osxcross (Intel)
 make build-mac-x64
 
-# Build Windows DLL via Docker
+# Build macOS .dylib via Docker using osxcross (Apple Silicon)
+make build-mac
+
+# Build Windows DLL via Docker (x86_64)
 make build-win
 
-# Build Windows DLL natively (requires mingw-w64)
+# Build Windows DLL natively (x86_64, requires mingw-w64)
 make build-win-native
 
 # Build Windows DLL natively in release mode
 make build-win-native-release
 ```
+
+> **Note:** Windows ARM64 and Linux ARM64 builds are also available as
+> [pre-built binaries](#pre-built-binaries) from GitHub Releases, built natively
+> on GitHub Actions runners.
 
 Or directly with Cargo:
 

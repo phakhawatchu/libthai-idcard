@@ -9,7 +9,7 @@ env:
 
 jobs:
   build-linux:
-    name: Linux .so
+    name: Linux .so (x86_64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,36 +19,76 @@ jobs:
           targets: x86_64-unknown-linux-gnu
       - run: sudo apt-get update && sudo apt-get install -y libpcsclite-dev
       - run: cargo build --release --lib --target x86_64-unknown-linux-gnu
+      - run: cp target/x86_64-unknown-linux-gnu/release/libthaiidcard.so libthaiidcard-linux-x86_64.so
       - uses: actions/upload-artifact@v4
         with:
-          name: libthaiidcard-linux-amd64
-          path: target/x86_64-unknown-linux-gnu/release/libthaiidcard.so
+          name: libthaiidcard-linux-x86_64
+          path: libthaiidcard-linux-x86_64.so
 
-  build-mac:
-    name: macOS .dylib (Universal)
+  build-linux-arm64:
+    name: Linux .so (ARM64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-unknown-linux-gnu
+      - name: Install cross-compilation tools
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpcsclite-dev:arm64 \
+            gcc-aarch64-linux-gnu \
+            pkg-config
+      - name: Build
+        run: |
+          export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+          export PKG_CONFIG_ALLOW_CROSS=1
+          export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          cargo build --release --lib --target aarch64-unknown-linux-gnu
+      - run: cp target/aarch64-unknown-linux-gnu/release/libthaiidcard.so libthaiidcard-linux-arm64.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libthaiidcard-linux-arm64
+          path: libthaiidcard-linux-arm64.so
+
+  build-mac-x64:
+    name: macOS .dylib (x86_64)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: aarch64-apple-darwin x86_64-apple-darwin
-      - run: cargo build --release --lib --target aarch64-apple-darwin
+          targets: x86_64-apple-darwin
       - run: cargo build --release --lib --target x86_64-apple-darwin
-      - name: Create universal binary
-        run: |
-          mkdir -p universal
-          lipo -create \
-            target/aarch64-apple-darwin/release/libthaiidcard.dylib \
-            target/x86_64-apple-darwin/release/libthaiidcard.dylib \
-            -output universal/libthaiidcard.dylib
+      - run: cp target/x86_64-apple-darwin/release/libthaiidcard.dylib libthaiidcard-macos-x86_64.dylib
       - uses: actions/upload-artifact@v4
         with:
-          name: libthaiidcard-macos-universal
-          path: universal/libthaiidcard.dylib
+          name: libthaiidcard-macos-x86_64
+          path: libthaiidcard-macos-x86_64.dylib
+
+  build-mac-arm64:
+    name: macOS .dylib (ARM64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin
+      - run: cargo build --release --lib --target aarch64-apple-darwin
+      - run: cp target/aarch64-apple-darwin/release/libthaiidcard.dylib libthaiidcard-macos-arm64.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libthaiidcard-macos-arm64
+          path: libthaiidcard-macos-arm64.dylib
 
   build-windows:
-    name: Windows .dll
+    name: Windows .dll (x86_64)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,17 +97,37 @@ jobs:
           toolchain: stable
           targets: x86_64-pc-windows-msvc
       - run: cargo build --release --lib --target x86_64-pc-windows-msvc
+      - run: cp target/x86_64-pc-windows-msvc/release/thaiidcard.dll thaiidcard-windows-x86_64.dll
       - uses: actions/upload-artifact@v4
         with:
-          name: thaiidcard-windows-amd64
-          path: target/x86_64-pc-windows-msvc/release/thaiidcard.dll
+          name: thaiidcard-windows-x86_64
+          path: thaiidcard-windows-x86_64.dll
+
+  build-windows-arm64:
+    name: Windows .dll (ARM64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-pc-windows-msvc
+      - run: cargo build --release --lib --target aarch64-pc-windows-msvc
+      - run: cp target/aarch64-pc-windows-msvc/release/thaiidcard.dll thaiidcard-windows-arm64.dll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thaiidcard-windows-arm64
+          path: thaiidcard-windows-arm64.dll
 
   release:
     name: Create Release
     needs:
       - build-linux
-      - build-mac
+      - build-linux-arm64
+      - build-mac-x64
+      - build-mac-arm64
       - build-windows
+      - build-windows-arm64
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -75,9 +135,8 @@ jobs:
       - uses: actions/download-artifact@v4
       - run: |
           mkdir artifacts
-          cp libthaiidcard-linux-amd64/* artifacts/
-          cp libthaiidcard-macos-universal/* artifacts/
-          cp thaiidcard-windows-amd64/* artifacts/
+          cp -r libthaiidcard-*/libthaiidcard-*.* artifacts/
+          cp -r thaiidcard-*/thaiidcard-*.* artifacts/
           ls -lh artifacts/
       - uses: softprops/action-gh-release@v2
         with:

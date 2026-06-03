@@ -50,11 +50,18 @@ install: build-release ## Install the shared library system-wide (Linux/macOS)
 ##@ Cross-compilation
 
 .PHONY: build-linux
-build-linux: ## Build Linux .so via Docker
+build-linux: ## Build Linux .so via Docker (x86_64)
 	docker build --build-arg TARGET=x86_64-unknown-linux-gnu \
 		-f Dockerfile.build -t thaiidcard-builder .
 	docker run --rm -v $(PWD):/build thaiidcard-builder
 	@ls -lh target/x86_64-unknown-linux-gnu/release/libthaiidcard.so 2>/dev/null || true
+
+.PHONY: build-linux-arm64
+build-linux-arm64: ## Build Linux .so via Docker (ARM64)
+	docker build --build-arg TARGET=aarch64-unknown-linux-gnu \
+		-f Dockerfile.build -t thaiidcard-builder .
+	docker run --rm -v $(PWD):/build thaiidcard-builder
+	@ls -lh target/aarch64-unknown-linux-gnu/release/libthaiidcard.so 2>/dev/null || true
 
 .PHONY: build-mac
 build-mac: ## Build macOS .dylib via Docker (Apple Silicon)
@@ -71,14 +78,14 @@ build-mac-x64: ## Build macOS .dylib via Docker (Intel)
 	@ls -lh target/x86_64-apple-darwin/release/libthaiidcard.dylib 2>/dev/null || true
 
 .PHONY: build-win
-build-win: ## Build Windows DLL via Docker
+build-win: ## Build Windows DLL via Docker (x86_64)
 	docker build --build-arg TARGET=x86_64-pc-windows-gnu \
 		-f Dockerfile.build -t thaiidcard-builder .
 	docker run --rm -v $(PWD):/build thaiidcard-builder
 	@ls -lh target/x86_64-pc-windows-gnu/release/thaiidcard.dll 2>/dev/null || true
 
 .PHONY: build-win-native
-build-win-native: ## Build Windows DLL natively (requires mingw-w64)
+build-win-native: ## Build Windows DLL natively (x86_64, requires mingw-w64)
 	cargo build --target x86_64-pc-windows-gnu --lib
 	@echo "---"
 	@ls -lh target/x86_64-pc-windows-gnu/debug/thaiidcard.dll

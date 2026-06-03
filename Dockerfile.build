@@ -18,9 +18,16 @@ SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
 # ---------------------------------------------------------------------------
 RUN case "$TARGET" in \
     *linux-gnu) \
+    case "$TARGET" in \
+    aarch64*) \
+    dpkg --add-architecture arm64 \
+    && apt-get update \
+    && apt-get install -y libpcsclite-dev:arm64 pkg-config gcc-aarch64-linux-gnu ;; \
+    *) \
     dpkg --add-architecture amd64 \
     && apt-get update \
-    && apt-get install -y libpcsclite-dev:amd64 pkg-config gcc-x86-64-linux-gnu \
+    && apt-get install -y libpcsclite-dev:amd64 pkg-config gcc-x86-64-linux-gnu ;; \
+    esac \
     && rm -rf /var/lib/apt/lists/* ;; \
     *windows-gnu) \
     apt-get update \
@@ -46,12 +53,22 @@ RUN rustup target add "$TARGET"
 # ---------------------------------------------------------------------------
 RUN case "$TARGET" in \
     *linux-gnu) \
+    case "$TARGET" in \
+    aarch64*) \
+    printf '%s\n' \
+    'export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig' \
+    'export PKG_CONFIG_ALLOW_CROSS=1' \
+    'export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc' \
+    'export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc' \
+    >> /build-env.sh ;; \
+    *) \
     printf '%s\n' \
     'export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig' \
     'export PKG_CONFIG_ALLOW_CROSS=1' \
     'export CC_x86_64_unknown_linux_gnu=x86_64-linux-gnu-gcc' \
     'export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc' \
     >> /build-env.sh ;; \
+    esac ;; \
     *windows-gnu) \
     printf '%s\n' \
     'export CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc' \
