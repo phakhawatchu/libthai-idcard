@@ -13,21 +13,78 @@
 require 'fiddle'
 
 # ---------------------------------------------------------------------------
-# Locate the shared library
+# Platform detection and library path resolution
 # ---------------------------------------------------------------------------
 
-def find_library
+# Host OS detection helpers
+module Platform
+  WINDOWS = RbConfig::CONFIG['host_os'] =~ /mingw|mswin|cygwin/
+  MACOS   = RbConfig::CONFIG['host_os'] =~ /darwin/
+  LINUX   = !WINDOWS && !MACOS
+end
+
+# Return the shared library filename for the current platform.
+def library_filename
+  if Platform::WINDOWS
+    'thaiidcard.dll'
+  elsif Platform::MACOS
+    'libthaiidcard.dylib'
+  else
+    'libthaiidcard.so'
+  end
+end
+
+# Return a list of candidate paths to search for libthaiidcard.
+def library_candidates
+  name = library_filename
+  dir  = __dir__
+
   candidates = [
     # Development build (run from project root)
-    File.expand_path('../target/debug/libthaiidcard.dylib', __dir__),
-    # Installed system-wide (macOS)
-    '/usr/local/lib/libthaiidcard.dylib',
-    # Installed system-wide (Linux)
-    '/usr/local/lib/libthaiidcard.so',
+    File.expand_path("../target/debug/#{name}", dir),
+    File.expand_path("../target/release/#{name}", dir),
   ]
 
-  candidates.find { |p| File.exist?(p) } or
+  if Platform::MACOS
+    # macOS system-wide paths
+    candidates.concat([
+      "/usr/local/lib/#{name}",
+      "/opt/homebrew/lib/#{name}",
+    ])
+  elsif Platform::LINUX
+    # Linux system-wide paths
+    candidates.concat([
+      "/usr/local/lib/#{name}",
+      "/usr/lib/#{name}",
+      "/usr/lib/x86_64-linux-gnu/#{name}",
+      "/usr/lib/aarch64-linux-gnu/#{name}",
+    ])
+  else
+    # Windows system-wide paths
+    sysroot = ENV['SYSTEMROOT'] || 'C:\\Windows'
+    pf      = ENV['PROGRAMFILES'] || 'C:\\Program Files'
+    candidates.concat([
+      "#{sysroot}\\System32\\#{name}",
+      "#{pf}\\thaiidcard\\bin\\#{name}",
+    ])
+  end
+
+  candidates.uniq
+end
+
+# Locate libthaiidcard on the filesystem, or raise.
+def find_library
+  found = library_candidates.find { |p| File.exist?(p) }
+  return found if found
+
+  # Last resort: let the system linker search default paths.
+  begin
+    handle = Fiddle.dlopen(library_filename)
+    handle.close
+    return library_filename
+  rescue Fiddle::DLError
     raise "libthaiidcard not found. Build it with: make shared"
+  end
 end
 
 # ---------------------------------------------------------------------------

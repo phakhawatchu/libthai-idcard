@@ -12,6 +12,7 @@ Usage:
 import ctypes
 import ctypes.util
 import os
+import platform
 import sys
 
 # ---------------------------------------------------------------------------
@@ -20,28 +21,58 @@ import sys
 
 
 def find_library() -> str:
-    """Locate libthaiidcard.dylib/.so — tries several paths."""
+    """Locate libthaiidcard — tries platform-specific paths."""
+
+    # Determine the library filename for the current platform
+    system = platform.system()
+    if system == "Windows":
+        lib_name = "thaiidcard.dll"
+    elif system == "Darwin":
+        lib_name = "libthaiidcard.dylib"
+    else:  # Linux and other Unix
+        lib_name = "libthaiidcard.so"
+
+    # Project root (two levels up from examples/)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     candidates = [
-        # Development build (run from project root)
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "target",
-            "debug",
-            "libthaiidcard.dylib",
-        ),
-        # Installed system-wide (macOS)
-        "/usr/local/lib/libthaiidcard.dylib",
-        # Installed system-wide (Linux)
-        "/usr/local/lib/libthaiidcard.so",
-        # ctypes default search
-        ctypes.util.find_library("thaiidcard"),
+        # Development build
+        os.path.join(project_root, "target", "debug", lib_name),
+        os.path.join(project_root, "target", "release", lib_name),
     ]
+
+    if system == "Darwin":
+        candidates.extend([
+            "/usr/local/lib/" + lib_name,
+            "/opt/homebrew/lib/" + lib_name,
+        ])
+    elif system == "Linux":
+        candidates.extend([
+            "/usr/local/lib/" + lib_name,
+            "/usr/lib/" + lib_name,
+            "/usr/lib/x86_64-linux-gnu/" + lib_name,
+            "/usr/lib/aarch64-linux-gnu/" + lib_name,
+        ])
+    elif system == "Windows":
+        sysroot = os.environ.get("SYSTEMROOT", "C:\\Windows")
+        pf = os.environ.get("PROGRAMFILES", "C:\\Program Files")
+        candidates.extend([
+            os.path.join(sysroot, "System32", lib_name),
+            os.path.join(pf, "thaiidcard", "bin", lib_name),
+        ])
+
+    # ctypes fallback — searches system library paths
+    fallback = ctypes.util.find_library("thaiidcard")
+    if fallback:
+        candidates.append(fallback)
+
     for path in candidates:
         if path and os.path.exists(path):
             return path
+
     raise FileNotFoundError(
-        "libthaiidcard not found. Build it with: make shared"
+        f"libthaiidcard not found ({lib_name}). "
+        f"Build it with: make shared"
     )
 
 

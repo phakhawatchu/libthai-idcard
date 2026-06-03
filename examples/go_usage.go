@@ -9,10 +9,35 @@
 package main
 
 /*
-#cgo LDFLAGS: -ldl
-#include <dlfcn.h>
+#cgo !windows LDFLAGS: -ldl
 #include <stdlib.h>
 #include <stdio.h>
+
+// ---------------------------------------------------------------------------
+// Platform abstraction for dynamic library loading
+// ---------------------------------------------------------------------------
+#ifdef _WIN32
+#include <windows.h>
+typedef HMODULE lib_handle;
+static inline lib_handle lib_load(const char* name) { return LoadLibraryA(name); }
+static inline void*     lib_sym(lib_handle h, const char* n) { return (void*)GetProcAddress(h, n); }
+static inline int       lib_close(lib_handle h) { return FreeLibrary(h) ? 0 : -1; }
+static const char*      lib_error(void) {
+    static char buf[256];
+    DWORD err = GetLastError();
+    if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, buf, sizeof(buf), NULL))
+        return buf;
+    snprintf(buf, sizeof(buf), "error code %lu", (unsigned long)err);
+    return buf;
+}
+#else
+#include <dlfcn.h>
+typedef void* lib_handle;
+#define lib_load(name)    dlopen(name, RTLD_LAZY)
+#define lib_sym(handle,n) dlsym(handle, n)
+#define lib_close(handle) dlclose(handle)
+#define lib_error()       dlerror()
+#endif
 
 // Opaque handle type.
 typedef struct thaiid_card_data thaiid_card_data;
@@ -24,7 +49,7 @@ typedef const char* (*get_last_error_fn)(void);
 typedef const char* (*get_str_fn)(const thaiid_card_data*);
 
 // Globals (populated by loadLibrary).
-static void* g_lib = NULL;
+static lib_handle g_lib = NULL;
 static read_fn fn_read = NULL;
 static free_fn fn_free = NULL;
 static get_last_error_fn fn_get_last_error = NULL;
@@ -51,15 +76,15 @@ static get_str_fn fn_get_nhso_update_date = NULL;
 static get_str_fn fn_get_change_hospital_amount = NULL;
 
 static int loadLibrary(const char* path) {
-	g_lib = dlopen(path, RTLD_LAZY);
+	g_lib = lib_load(path);
 	if (!g_lib) {
-		fprintf(stderr, "Failed to load %s: %s\n", path, dlerror());
+		fprintf(stderr, "Failed to load %s: %s\n", path, lib_error());
 		return -1;
 	}
 
 #define RESOLVE(var, name) do { \
-	*(void**)(&var) = dlsym(g_lib, name); \
-	if (!var) { fprintf(stderr, "Missing symbol: %s (%s)\n", name, dlerror()); dlclose(g_lib); return -1; } \
+	*(void**)(&var) = lib_sym(g_lib, name); \
+	if (!var) { fprintf(stderr, "Missing symbol: %s (%s)\n", name, lib_error()); lib_close(g_lib); return -1; } \
 } while(0)
 
 	RESOLVE(fn_read, "thaiid_read");
@@ -92,7 +117,7 @@ static int loadLibrary(const char* path) {
 }
 
 static void unloadLibrary(void) {
-	if (g_lib) dlclose(g_lib);
+	if (g_lib) lib_close(g_lib);
 }
 
 // Wrappers callable from Go.
@@ -129,10 +154,78 @@ import "C"
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
+// libraryFilename returns the shared library name for the current platform.
+func libraryFilename() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "thaiidcard.dll"
+	case "darwin":
+		return "libthaiidcard.dylib"
+	default:
+		return "libthaiidcard.so"
+	}
+}
+
+// findLibrary searches common locations for libthaiidcard.
+func findLibrary() string {
+	name := libraryFilename()
+
+	// Relative paths (cwd = project root when running from repo root)
+	relPaths := []string{
+		"target/debug/",
+		"target/release/",
+	}
+	for _, dir := range relPaths {
+		path := dir + name
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	// System-wide paths per platform
+	var sysPaths []string
+	switch runtime.GOOS {
+	case "darwin":
+		sysPaths = []string{
+			"/usr/local/lib/",
+			"/opt/homebrew/lib/",
+		}
+	case "linux":
+		sysPaths = []string{
+			"/usr/local/lib/",
+			"/usr/lib/",
+			"/usr/lib/x86_64-linux-gnu/",
+			"/usr/lib/aarch64-linux-gnu/",
+		}
+	case "windows":
+		sysRoot := os.Getenv("SYSTEMROOT")
+		if sysRoot == "" {
+			sysRoot = "C:\\Windows"
+		}
+		pf := os.Getenv("PROGRAMFILES")
+		if pf == "" {
+			pf = "C:\\Program Files"
+		}
+		sysPaths = []string{
+			sysRoot + "\\System32\\",
+			pf + "\\thaiidcard\\bin\\",
+		}
+	}
+	for _, dir := range sysPaths {
+		path := dir + name
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	return ""
+}
+
 func main() {
-	libPath := "target/debug/libthaiidcard.dylib"
+	libPath := ""
 	readerName := ""
 
 	if len(os.Args) > 1 {
@@ -140,6 +233,16 @@ func main() {
 	}
 	if len(os.Args) > 2 {
 		readerName = os.Args[2]
+	}
+
+	// Auto-discover if no path was given
+	if libPath == "" {
+		libPath = findLibrary()
+		if libPath == "" {
+			fmt.Fprintf(os.Stderr, "libthaiidcard not found. "+
+				"Pass the path as the first argument, or build with: make shared\n")
+			os.Exit(1)
+		}
 	}
 
 	if C.loadLibrary(C.CString(libPath)) != 0 {

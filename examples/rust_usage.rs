@@ -1,7 +1,11 @@
 //! One-shot Thai smart card read example.
 //!
-//! Usage:
+//! This example links to the library at compile time (not dynamic loading).
+//! It works on macOS, Linux, and Windows via:
 //!     cargo run --example rust_usage [reader_name]
+//!
+//! For the C FFI / shared-library approach, see the c_usage.c, go_usage.go,
+//! python_usage.py, and ruby_usage.rb examples.
 
 use std::env;
 use thaiidcard::{model, Options, SmartCard};
