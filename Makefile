@@ -111,11 +111,36 @@ c-example-link: shared ## Build C example with direct linking
 		-Wl,-rpath,target/debug
 	/tmp/thaiid-c-link
 
+##@ C++ Example
+
+.PHONY: cpp-example
+cpp-example: shared ## Build and run the C++ usage example
+	g++ -std=c++17 -o /tmp/thaiid-cpp-example examples/cpp_usage.cpp $(shell uname -s | grep -q Linux && echo "-ldl")
+	/tmp/thaiid-cpp-example
+
 ##@ Go Example
 
 .PHONY: go-example
 go-example: shared ## Run the Go usage example
 	go run examples/go_usage.go
+
+##@ Java Example
+
+.PHONY: java-example
+java-example: shared ## Run the Java usage example (requires jbang)
+	jbang examples/java_usage.java
+
+##@ Kotlin Example
+
+.PHONY: kotlin-example
+kotlin-example: shared ## Run the Kotlin usage example (requires jbang)
+	jbang examples/kotlin_usage.kt
+
+##@ JavaScript Example
+
+.PHONY: js-example
+js-example: shared ## Run the JavaScript usage example (requires koffi)
+	node examples/js_usage.js
 
 ##@ Python Example
 

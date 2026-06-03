@@ -9,7 +9,7 @@
 [![MSRV](https://img.shields.io/badge/rustc-1.81%2B-lightgrey)](https://github.com/phakhawatchu/libthai-idcard)
 
 A Rust library for reading **Thai National ID smart cards** via PC/SC
-smart card readers, with **C**, **Go**, **Python**, and **Ruby** usage examples.
+smart card readers, with **C**, **C++**, **Go**, **Java**, **Kotlin**, **JavaScript**, **Python**, and **Ruby** usage examples.
 
 ## Overview
 
@@ -32,7 +32,11 @@ conversion, exposing the data through a clean multi-language API.
 - ✅ Auto-detect card reader or specify by name
 - ✅ Daemon mode for continuous card monitoring
 - ✅ C usage example (dynamic loading or link-time)
+- ✅ C++ usage example (via `dlopen`/`LoadLibrary`)
 - ✅ Go usage example (via `cgo`)
+- ✅ Java usage example (via `JNA`)
+- ✅ Kotlin usage example (via `JNA`)
+- ✅ JavaScript usage example (via `koffi`)
 - ✅ Python usage example (via `ctypes`)
 - ✅ Ruby usage example (via `fiddle`)
 
@@ -96,6 +100,23 @@ cc -o c_usage examples/c_usage.c -Ltarget/debug -lthaiidcard \
 ./c_usage
 ```
 
+### C++
+
+A C++ usage example is available at
+[`examples/cpp_usage.cpp`](examples/cpp_usage.cpp).
+It uses RAII wrappers and C++17 features to load the shared library
+and read card data.
+
+```bash
+# macOS / Linux:
+g++ -std=c++17 -o cpp_usage examples/cpp_usage.cpp -ldl
+./cpp_usage
+
+# Windows (MinGW):
+g++ -std=c++17 -o cpp_usage.exe examples/cpp_usage.cpp
+./cpp_usage
+```
+
 ### Go
 
 A Go usage example is available at
@@ -104,6 +125,48 @@ It uses `cgo` to load the shared library via `dlopen` and read card data.
 
 ```bash
 go run examples/go_usage.go
+```
+
+### Java
+
+A Java usage example is available at
+[`examples/java_usage.java`](examples/java_usage.java).
+It uses **JNA** (Java Native Access) to call the shared library functions.
+
+```bash
+# With jbang (auto-downloads JNA):
+jbang examples/java_usage.java
+
+# Or compile & run manually (download jna.jar first):
+javac -cp jna.jar examples/java_usage.java
+java -cp .:jna.jar java_usage
+```
+
+### Kotlin
+
+A Kotlin usage example is available at
+[`examples/kotlin_usage.kt`](examples/kotlin_usage.kt).
+It uses **JNA** (Java Native Access) to call the shared library functions.
+
+```bash
+# With jbang (auto-downloads JNA):
+jbang examples/kotlin_usage.kt
+
+# Or compile & run manually (download jna.jar first):
+kotlinc -cp jna.jar examples/kotlin_usage.kt
+kotlin -cp .:jna.jar kotlin_usageKt
+```
+
+### JavaScript
+
+A JavaScript usage example is available at
+[`examples/js_usage.js`](examples/js_usage.js).
+It uses **koffi** (a modern FFI library for Node.js) to call the shared
+library functions.
+
+```bash
+npm install koffi
+node examples/js_usage.js
 ```
 
 ### Python
@@ -133,7 +196,7 @@ ruby examples/ruby_usage.rb
 # Build all Rust targets (library + examples)
 make build
 
-# Build only the native shared library (.dylib/.so)
+# Build only the native shared library (.dylib/.so/.dll)
 make shared
 
 # Generate C header file (requires cbindgen)
@@ -145,8 +208,20 @@ make example
 # Run the C example
 make c-example
 
+# Run the C++ example
+make cpp-example
+
 # Run the Go example
 make go-example
+
+# Run the Java example
+make java-example
+
+# Run the Kotlin example
+make kotlin-example
+
+# Run the JavaScript example
+make js-example
 
 # Run the Python example
 make python-example
@@ -258,7 +333,11 @@ CardData
 └── examples/
     ├── rust_usage.rs      — Rust usage example
     ├── c_usage.c          — C usage example
+    ├── cpp_usage.cpp      — C++ usage example
     ├── go_usage.go        — Go usage example
+    ├── java_usage.java    — Java usage example
+    ├── kotlin_usage.kt    — Kotlin usage example
+    ├── js_usage.js        — JavaScript usage example
     ├── python_usage.py    — Python usage example
     └── ruby_usage.rb      — Ruby usage example
 ```

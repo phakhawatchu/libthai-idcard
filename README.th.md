@@ -8,7 +8,7 @@
 [![MSRV](https://img.shields.io/badge/rustc-1.81%2B-lightgrey)](https://github.com/phakhawatchu/libthai-idcard)
 
 ไลบรารีภาษา Rust สำหรับอ่านข้อมูลจาก **บัตรประจำตัวประชาชนแบบ Smart Card**
-ผ่าน PC/SC พร้อมตัวอย่างการใช้งานในภาษา **C**, **Go**, **Python** และ **Ruby**
+ผ่าน PC/SC พร้อมตัวอย่างการใช้งานในภาษา **C**, **C++**, **Go**, **Java**, **Kotlin**, **JavaScript**, **Python** และ **Ruby**
 
 ## ภาพรวม
 
@@ -29,7 +29,11 @@
 - ✅ ตรวจจับเครื่องอ่านบัตรอัตโนมัติ หรือระบุชื่อเครื่องที่ต้องการ
 - ✅ โหมด Daemon สำหรับมอนิเตอร์การเสียบบัตร
 - ✅ ตัวอย่างการใช้งานภาษา C (โหลดแบบ dynamic หรือ link-time)
+- ✅ ตัวอย่างการใช้งานภาษา C++ (ผ่าน `dlopen`/`LoadLibrary`)
 - ✅ ตัวอย่างการใช้งานภาษา Go (ผ่าน `cgo`)
+- ✅ ตัวอย่างการใช้งานภาษา Java (ผ่าน `JNA`)
+- ✅ ตัวอย่างการใช้งานภาษา Kotlin (ผ่าน `JNA`)
+- ✅ ตัวอย่างการใช้งานภาษา JavaScript (ผ่าน `koffi`)
 - ✅ ตัวอย่างการใช้งานภาษา Python (ผ่าน `ctypes`)
 - ✅ ตัวอย่างการใช้งานภาษา Ruby (ผ่าน `fiddle`)
 
@@ -92,6 +96,23 @@ cc -o c_usage examples/c_usage.c -Ltarget/debug -lthaiidcard \
 ./c_usage
 ```
 
+### C++
+
+ตัวอย่างการใช้งานภาษา C++ อยู่ที่
+[`examples/cpp_usage.cpp`](examples/cpp_usage.cpp)
+ใช้ RAII wrappers และฟีเจอร์ C++17 เพื่อโหลด shared library
+และอ่านข้อมูลบัตร
+
+```bash
+# macOS / Linux:
+g++ -std=c++17 -o cpp_usage examples/cpp_usage.cpp -ldl
+./cpp_usage
+
+# Windows (MinGW):
+g++ -std=c++17 -o cpp_usage.exe examples/cpp_usage.cpp
+./cpp_usage
+```
+
 ### Go
 
 ตัวอย่างการใช้งานภาษา Go อยู่ที่
@@ -100,6 +121,48 @@ cc -o c_usage examples/c_usage.c -Ltarget/debug -lthaiidcard \
 
 ```bash
 go run examples/go_usage.go
+```
+
+### Java
+
+ตัวอย่างการใช้งานภาษา Java อยู่ที่
+[`examples/java_usage.java`](examples/java_usage.java)
+ใช้ **JNA** (Java Native Access) ในการเรียกฟังก์ชันจาก shared library
+
+```bash
+# ใช้ jbang (ดาวน์โหลด JNA อัตโนมัติ):
+jbang examples/java_usage.java
+
+# หรือคอมไพล์และรันด้วยตนเอง (ต้องดาวน์โหลด jna.jar ก่อน):
+javac -cp jna.jar examples/java_usage.java
+java -cp .:jna.jar java_usage
+```
+
+### Kotlin
+
+ตัวอย่างการใช้งานภาษา Kotlin อยู่ที่
+[`examples/kotlin_usage.kt`](examples/kotlin_usage.kt)
+ใช้ **JNA** (Java Native Access) ในการเรียกฟังก์ชันจาก shared library
+
+```bash
+# ใช้ jbang (ดาวน์โหลด JNA อัตโนมัติ):
+jbang examples/kotlin_usage.kt
+
+# หรือคอมไพล์และรันด้วยตนเอง (ต้องดาวน์โหลด jna.jar ก่อน):
+kotlinc -cp jna.jar examples/kotlin_usage.kt
+kotlin -cp .:jna.jar kotlin_usageKt
+```
+
+### JavaScript
+
+ตัวอย่างการใช้งานภาษา JavaScript อยู่ที่
+[`examples/js_usage.js`](examples/js_usage.js)
+ใช้ **koffi** (ไลบรารี FFI ที่ทันสมัยสำหรับ Node.js) ในการเรียกฟังก์ชัน
+จาก shared library
+
+```bash
+npm install koffi
+node examples/js_usage.js
 ```
 
 ### Python
@@ -128,7 +191,7 @@ ruby examples/ruby_usage.rb
 # คอมไพล์ทุก target (library + examples)
 make build
 
-# คอมไพล์เฉพาะ shared library (.dylib/.so)
+# คอมไพล์เฉพาะ shared library (.dylib/.so/.dll)
 make shared
 
 # สร้างไฟล์ header สำหรับ C (ต้องติดตั้ง cbindgen)
@@ -140,8 +203,20 @@ make example
 # รันตัวอย่างภาษา C
 make c-example
 
+# รันตัวอย่างภาษา C++
+make cpp-example
+
 # รันตัวอย่างภาษา Go
 make go-example
+
+# รันตัวอย่างภาษา Java
+make java-example
+
+# รันตัวอย่างภาษา Kotlin
+make kotlin-example
+
+# รันตัวอย่างภาษา JavaScript
+make js-example
 
 # รันตัวอย่างภาษา Python
 make python-example
@@ -232,7 +307,11 @@ CardData
 └── examples/
     ├── rust_usage.rs      — ตัวอย่างภาษา Rust
     ├── c_usage.c          — ตัวอย่างภาษา C
+    ├── cpp_usage.cpp      — ตัวอย่างภาษา C++
     ├── go_usage.go        — ตัวอย่างภาษา Go
+    ├── java_usage.java    — ตัวอย่างภาษา Java
+    ├── kotlin_usage.kt    — ตัวอย่างภาษา Kotlin
+    ├── js_usage.js        — ตัวอย่างภาษา JavaScript
     ├── python_usage.py    — ตัวอย่างภาษา Python
     └── ruby_usage.rb      — ตัวอย่างภาษา Ruby
 ```
