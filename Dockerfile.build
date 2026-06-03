@@ -1,0 +1,79 @@
+# Multi-target cross-compilation Dockerfile.
+#
+# Build for Linux:   make build-linux
+# Build for macOS:   make build-mac / build-mac-x64
+# Build for Windows: make build-win
+
+ARG TARGET=x86_64-unknown-linux-gnu
+
+FROM rust:latest
+
+ARG TARGET
+ENV TARGET=$TARGET
+
+SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
+
+# ---------------------------------------------------------------------------
+# Target-specific toolchain & libraries
+# ---------------------------------------------------------------------------
+RUN case "$TARGET" in \
+    *linux-gnu) \
+    dpkg --add-architecture amd64 \
+    && apt-get update \
+    && apt-get install -y libpcsclite-dev:amd64 pkg-config gcc-x86-64-linux-gnu \
+    && rm -rf /var/lib/apt/lists/* ;; \
+    *windows-gnu) \
+    apt-get update \
+    && apt-get install -y gcc-mingw-w64-x86-64 \
+    && rm -rf /var/lib/apt/lists/* ;; \
+    *apple-darwin) \
+    apt-get update \
+    && apt-get install -y clang cmake git libssl-dev libxml2-dev liblzma-dev \
+    libbz2-dev zlib1g-dev patch python3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && git clone --depth=1 https://github.com/tpoechtrager/osxcross.git /osxcross \
+    && wget -qO /osxcross/tarballs/MacOSX11.3.sdk.tar.xz \
+    https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.3.sdk.tar.xz \
+    && cd /osxcross \
+    && UNATTENDED=1 ENABLE_ARCHS="arm64 x86_64" TARGET_DIR=/usr/local/osxcross ./build.sh \
+    && rm -rf /osxcross /root/.cache ;; \
+    esac
+
+RUN rustup target add "$TARGET"
+
+# ---------------------------------------------------------------------------
+# Target-specific environment variables
+# ---------------------------------------------------------------------------
+RUN case "$TARGET" in \
+    *linux-gnu) \
+    printf '%s\n' \
+    'export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig' \
+    'export PKG_CONFIG_ALLOW_CROSS=1' \
+    'export CC_x86_64_unknown_linux_gnu=x86_64-linux-gnu-gcc' \
+    'export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc' \
+    >> /build-env.sh ;; \
+    *windows-gnu) \
+    printf '%s\n' \
+    'export CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc' \
+    'export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc' \
+    >> /build-env.sh ;; \
+    *apple-darwin) \
+    printf '%s\n' \
+    'export PATH=/usr/local/osxcross/bin:$PATH' \
+    'export SDKROOT=/usr/local/osxcross/SDK/MacOSX11.3.sdk' \
+    'export MACOSX_DEPLOYMENT_TARGET=11.0' \
+    'export LIBPCSCLITE_NO_PKG_CONFIG=1' \
+    "export DARWIN=\$(ls /usr/local/osxcross/bin/ | grep -o 'darwin[0-9.]*' | head -1)" \
+    "export CC_aarch64_apple_darwin=aarch64-apple-\$DARWIN-clang" \
+    "export CXX_aarch64_apple_darwin=aarch64-apple-\$DARWIN-clang++" \
+    "export CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=aarch64-apple-\$DARWIN-clang" \
+    "export CC_x86_64_apple_darwin=x86_64-apple-\$DARWIN-clang" \
+    "export CXX_x86_64_apple_darwin=x86_64-apple-\$DARWIN-clang++" \
+    "export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=x86_64-apple-\$DARWIN-clang" \
+    >> /build-env.sh ;; \
+    esac
+
+WORKDIR /build
+COPY . .
+
+CMD ["sh", "-c", ". /build-env.sh 2>/dev/null; cargo build --release --lib --target \"$TARGET\""]

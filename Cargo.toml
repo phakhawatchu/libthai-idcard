@@ -1,0 +1,23 @@
+[package]
+name = "libthai-idcard"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.81"
+description = "A Rust library for reading Thai National ID smart cards via PC/SC"
+authors = ["Phakhawat Chullamonthon <phakhawat.chu@outlook.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/phakhawatchu/libthai-idcard"
+homepage = "https://github.com/phakhawatchu/libthai-idcard"
+readme = "README.md"
+keywords = ["thai", "national-id", "smart-card", "pcsc", "nhso"]
+categories = ["api-bindings", "hardware-support"]
+
+[dependencies]
+pcsc = "2.8"
+encoding_rs = "0.8"
+hex = "0.4"
+base64 = "0.22"
+
+[lib]
+name = "thaiidcard"
+crate-type = ["cdylib", "lib"]
