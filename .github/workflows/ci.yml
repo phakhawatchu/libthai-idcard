@@ -15,9 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
+      - uses: dtolnay/rust-toolchain@master
+      - run: rustup component add rustfmt
       - run: cargo fmt --check
 
   clippy:
@@ -25,9 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - uses: dtolnay/rust-toolchain@master
+      - run: rustup component add clippy
       - run: cargo clippy -- -D warnings
 
   test:
@@ -38,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
       - run: cargo test
       - run: cargo check --examples
 
@@ -47,6 +45,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
       - run: cargo build --release
       - run: cargo build --lib --release
