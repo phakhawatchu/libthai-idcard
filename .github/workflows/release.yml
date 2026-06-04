@@ -20,7 +20,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libpcsclite-dev
       - run: cargo build --release --lib --target x86_64-unknown-linux-gnu
       - run: cp target/x86_64-unknown-linux-gnu/release/libthaiidcard.so libthaiidcard-linux-x86_64.so
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libthaiidcard-linux-x86_64
           path: libthaiidcard-linux-x86_64.so
@@ -36,7 +36,7 @@ jobs:
             -f Dockerfile.build -t thaiidcard-builder-linux-arm64 .
           docker run --rm -v $(pwd):/build thaiidcard-builder-linux-arm64
       - run: cp target/aarch64-unknown-linux-gnu/release/libthaiidcard.so libthaiidcard-linux-arm64.so
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libthaiidcard-linux-arm64
           path: libthaiidcard-linux-arm64.so
@@ -52,7 +52,7 @@ jobs:
           targets: x86_64-apple-darwin
       - run: cargo build --release --lib --target x86_64-apple-darwin
       - run: cp target/x86_64-apple-darwin/release/libthaiidcard.dylib libthaiidcard-macos-x86_64.dylib
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libthaiidcard-macos-x86_64
           path: libthaiidcard-macos-x86_64.dylib
@@ -68,7 +68,7 @@ jobs:
           targets: aarch64-apple-darwin
       - run: cargo build --release --lib --target aarch64-apple-darwin
       - run: cp target/aarch64-apple-darwin/release/libthaiidcard.dylib libthaiidcard-macos-arm64.dylib
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libthaiidcard-macos-arm64
           path: libthaiidcard-macos-arm64.dylib
@@ -84,7 +84,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
       - run: cargo build --release --lib --target x86_64-pc-windows-msvc
       - run: cp target/x86_64-pc-windows-msvc/release/thaiidcard.dll thaiidcard-windows-x86_64.dll
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: thaiidcard-windows-x86_64
           path: thaiidcard-windows-x86_64.dll
@@ -100,7 +100,7 @@ jobs:
           targets: aarch64-pc-windows-msvc
       - run: cargo build --release --lib --target aarch64-pc-windows-msvc
       - run: cp target/aarch64-pc-windows-msvc/release/thaiidcard.dll thaiidcard-windows-arm64.dll
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: thaiidcard-windows-arm64
           path: thaiidcard-windows-arm64.dll
