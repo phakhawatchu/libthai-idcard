@@ -1,8 +1,11 @@
-//! `libthai-idcard` — A Rust library for reading Thai National ID smart cards
-//! via PC/SC card readers. Supports personal information, NHSO insurance data,
-//! and the laser-engraved card serial number.
+//! # libthai-idcard
 //!
-//! # Basic usage
+//! **A cross-platform Rust library for reading Thai National ID smart cards
+//! via PC/SC card readers.** Supports personal information, NHSO insurance data,
+//! JPEG face photo, laser-engraved card serial number, and multi-language FFI
+//! (C, C++, Go, Java, Kotlin, JavaScript, Python, Ruby).
+//!
+//! ## Quick Start
 //!
 //! ```no_run
 //! use thaiidcard::{SmartCard, Options};
@@ -11,6 +14,30 @@
 //! let data = card.read(None, &Options::default()).unwrap();
 //! println!("Name: {}", data.personal.unwrap().name.full_name);
 //! ```
+//!
+//! ## Key Features
+//!
+//! - Read citizen ID, name (Thai & English), date of birth, gender
+//! - Read registered address (parsed into structured components)
+//! - Read card issuer, issue date, expiry date
+//! - Read JPEG face photo (returned as base64)
+//! - Read laser-engraved card serial number
+//! - Read NHSO insurance data (main/sub hospitals, coverage dates, etc.)
+//! - Automatic TIS-620 (Windows-874) Thai text decoding
+//! - Automatic Buddhist year (พ.ศ.) → Gregorian year (ค.ศ.) conversion
+//! - Auto-detect card reader or specify by name
+//! - Daemon mode for continuous card monitoring
+//! - C-compatible FFI for multi-language support
+//!
+//! ## Supported Languages
+//!
+//! The library provides usage examples for: Rust, C, C++, Go, Java, Kotlin,
+//! JavaScript (Node.js via koffi), Python (via ctypes), and Ruby (via fiddle).
+//!
+//! ## Platform Support
+//!
+//! macOS (Intel & Apple Silicon), Linux (x86_64 & ARM64), Windows (x86_64 & ARM64).
+//! Pre-built binaries available on [GitHub Releases](https://github.com/phakhawatchu/libthai-idcard/releases).
 #![allow(clippy::large_enum_variant)]
 
 pub mod apdu;

@@ -2,52 +2,105 @@
 
 # libthai-idcard
 
+**Read Thai National ID smart cards from Rust, C, C++, Go, Java, Kotlin, JavaScript, Python, and Ruby via PC/SC.**
+
 [![Crates.io](https://img.shields.io/crates/v/libthai-idcard)](https://crates.io/crates/libthai-idcard)
+[![Docs.rs](https://img.shields.io/docsrs/libthai-idcard)](https://docs.rs/libthai-idcard/latest/thaiidcard/)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](https://github.com/phakhawatchu/libthai-idcard)
 [![CI](https://github.com/phakhawatchu/libthai-idcard/actions/workflows/ci.yml/badge.svg)](https://github.com/phakhawatchu/libthai-idcard/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/phakhawatchu/libthai-idcard?logo=github)](https://github.com/phakhawatchu/libthai-idcard/releases/latest)
 [![MSRV](https://img.shields.io/badge/rustc-1.81%2B-lightgrey)](https://github.com/phakhawatchu/libthai-idcard)
+[![Crates.io Downloads](https://img.shields.io/crates/d/libthai-idcard)](https://crates.io/crates/libthai-idcard)
+[![GitHub Stars](https://img.shields.io/github/stars/phakhawatchu/libthai-idcard?style=social)](https://github.com/phakhawatchu/libthai-idcard)
 
-A Rust library for reading **Thai National ID smart cards** via PC/SC
-smart card readers, with **C**, **C++**, **Go**, **Java**, **Kotlin**, **JavaScript**, **Python**, and **Ruby** usage examples.
+---
 
-## Overview
+**libthai-idcard** is a cross-platform Rust library that reads and decodes data from **Thai National ID smart cards** (บัตรประจำตัวประชาชนแบบ Smart Card) using any PC/SC-compatible smart card reader. It handles the low-level APDU communication, TIS-620 (Windows-874) Thai text decoding, Buddhist-to-Gregorian calendar conversion, and exposes a clean multi-language API so you can integrate it into virtually any programming environment.
 
-Thai National ID smart cards store citizen identification data, a JPEG face
-photo, NHSO (National Health Security Office) insurance information, and a
-laser-engraved card serial number. This library handles the low-level APDU
-communication, TIS-620 (Thai) text decoding, and Buddhist-to-Gregorian date
-conversion, exposing the data through a clean multi-language API.
+## 📋 Table of Contents
 
-### Features
+- [libthai-idcard](#libthai-idcard)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [✨ Features](#-features)
+  - [🎯 Why libthai-idcard?](#-why-libthai-idcard)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Rust](#rust)
+    - [C](#c)
+    - [C++](#c-1)
+    - [Go](#go)
+    - [Java](#java)
+    - [Kotlin](#kotlin)
+    - [JavaScript / Node.js](#javascript--nodejs)
+    - [Python](#python)
+    - [Ruby](#ruby)
+  - [Building](#building)
+    - [Pre-built Binaries](#pre-built-binaries)
+    - [Cross-compilation](#cross-compilation)
+  - [Data Model](#data-model)
+  - [API Reference](#api-reference)
+    - [Core Types](#core-types)
+    - [FFI Functions (C-compatible)](#ffi-functions-c-compatible)
+  - [Project Structure](#project-structure)
+  - [FAQ](#faq)
+    - [What is a Thai National ID smart card?](#what-is-a-thai-national-id-smart-card)
+    - [Can I use this library without a physical card reader?](#can-i-use-this-library-without-a-physical-card-reader)
+    - [What programming languages can I use?](#what-programming-languages-can-i-use)
+    - [Does the library support NHSO (ประกันสุขภาพ) data?](#does-the-library-support-nhso-ประกันสุขภาพ-data)
+    - [How does the date conversion work?](#how-does-the-date-conversion-work)
+    - [Where can I get pre-built binaries?](#where-can-i-get-pre-built-binaries)
+  - [Contributing](#contributing)
+  - [References](#references)
+  - [License](#license)
 
-- ✅ Read citizen ID, name (Thai & English), date of birth, gender
-- ✅ Read registered address (parsed into components)
-- ✅ Read card issuer, issue date, expiry date
-- ✅ Read JPEG face photo (returned as base64)
-- ✅ Read laser-engraved card serial number
-- ✅ Read NHSO insurance data (main/sub hospitals, coverage dates, etc.)
-- ✅ Buddhist year → Gregorian calendar conversion
-- ✅ TIS-620 (Windows-874) Thai text decoding
-- ✅ Auto-detect card reader or specify by name
-- ✅ Daemon mode for continuous card monitoring
-- ✅ C usage example (dynamic loading or link-time)
-- ✅ C++ usage example (via `dlopen`/`LoadLibrary`)
-- ✅ Go usage example (via `cgo`)
-- ✅ Java usage example (via `JNA`)
-- ✅ Kotlin usage example (via `JNA`)
-- ✅ JavaScript usage example (via `koffi`)
-- ✅ Python usage example (via `ctypes`)
-- ✅ Ruby usage example (via `fiddle`)
+---
 
+## ✨ Features
+
+| Category             | Capability                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Identity**         | Read citizen ID (13-digit), full name (Thai & English), date of birth, gender                                                |
+| **Address**          | Read registered address, parsed into structured components                                                                   |
+| **Card Info**        | Read card issuer, issue date, expiry date                                                                                    |
+| **Photo**            | Read JPEG face photo, returned as base64-encoded string                                                                      |
+| **Laser ID**         | Read laser-engraved card serial number on the back of the card                                                               |
+| **NHSO**             | Read National Health Security Office insurance data: main/sub hospitals, coverage dates, payment type, hospital change count |
+| **Encoding**         | Automatic TIS-620 (Windows-874 / ISO 8859-11) Thai text decoding                                                             |
+| **Calendar**         | Automatic Buddhist year (พ.ศ.) → Gregorian year (ค.ศ.) conversion                                                            |
+| **Reader Detection** | Auto-detect available card readers or specify by name                                                                        |
+| **Daemon Mode**      | Continuous card monitoring with event callbacks                                                                              |
+| **Multi-language**   | Native Rust API + FFI examples in 8 languages                                                                                |
+
+## 🎯 Why libthai-idcard?
+
+- **Production-ready Rust library** for Thai National ID card reading — battle-tested in real-world applications
+- **8-language FFI tested** — use the same library from Rust, C, C++, Go, Java, Kotlin, JavaScript, Python, or Ruby
+- **Cross-platform** — works on macOS (Intel & Apple Silicon), Linux (x86_64 & ARM64), and Windows (x86_64 & ARM64)
+- **Complete data coverage** — reads all fields from the card, including NHSO insurance data and face photo
+- **Proper encoding** — correct TIS-620 Thai text decoding and Buddhist date conversion
+- **Clean API** — idiomatic Rust with well-documented types and builder-pattern options
+- **Pre-built binaries** — download from GitHub Releases, no compilation required
+- **Open source** — dual-licensed MIT / Apache 2.0
 
 ## Requirements
 
-- **Hardware:** A PC/SC-compatible smart card reader and a Thai National ID card
-- **Software:** PC/SC Lite (`pcsclite`) — installed by default on macOS and most Linux distributions
+- **Hardware:** A PC/SC-compatible smart card reader + a Thai National ID smart card
+- **Software:** PC/SC Lite (`pcsclite`)
   - **macOS:** Built-in (`PCSC.framework`)
   - **Linux:** `sudo apt install libpcsclite-dev` (Debian/Ubuntu) or `sudo dnf install pcsc-lite-devel` (Fedora)
   - **Windows:** Winscard (built-in)
+
+## Installation
+
+Add the library to your `Cargo.toml`:
+
+```toml
+[dependencies]
+libthai-idcard = "0.2"
+```
+
+For other languages, download the [pre-built shared library](https://github.com/phakhawatchu/libthai-idcard/releases/latest) for your platform and follow the [usage examples](#usage).
 
 ## Usage
 
@@ -157,7 +210,7 @@ kotlinc -cp jna.jar examples/kotlin_usage.kt
 kotlin -cp .:jna.jar kotlin_usageKt
 ```
 
-### JavaScript
+### JavaScript / Node.js
 
 A JavaScript usage example is available at
 [`examples/js_usage.js`](examples/js_usage.js).
@@ -239,7 +292,7 @@ for the following platforms:
 | Platform | Architecture          | File                               |
 | -------- | --------------------- | ---------------------------------- |
 | Linux    | x86_64                | `libthaiidcard-linux-x86_64.so`    |
-| Linux    | ARM64                 | `libthaiidcard-linux-arm64.so`     |
+| Linux    | ARM64 / AArch64       | `libthaiidcard-linux-arm64.so`     |
 | macOS    | x86_64 (Intel)        | `libthaiidcard-macos-x86_64.dylib` |
 | macOS    | ARM64 (Apple Silicon) | `libthaiidcard-macos-arm64.dylib`  |
 | Windows  | x86_64                | `thaiidcard-windows-x86_64.dll`    |
@@ -314,6 +367,36 @@ CardData
       └── change_hospital_amount — Hospital change count
 ```
 
+## API Reference
+
+Full API documentation is available on [docs.rs/libthai-idcard](https://docs.rs/libthai-idcard/latest/thaiidcard/).
+
+### Core Types
+
+- **`SmartCard`** — Main handle for reading Thai National ID smart cards
+  - `SmartCard::new()` — Create a new instance
+  - `SmartCard::list_readers()` — List all available PC/SC readers
+  - `card.read(reader_name, opts)` — Perform a single card read
+  - `card.start_daemon(opts)` — Monitor readers continuously (daemon mode)
+- **`Options`** — Configuration for data sections to read
+  - `show_nhso_data` — Include NHSO insurance data
+  - `show_laser_data` — Include laser-engraved serial number
+  - `show_face_image` — Include face photo (base64 JPEG)
+- **`CardData`** — Complete card data container
+- **`Personal`** — Personal identity information
+- **`Nhso`** — National Health Security Office insurance data
+- **`Card`** — Card metadata (laser ID)
+
+### FFI Functions (C-compatible)
+
+The shared library exposes these C-compatible functions:
+
+| Function                                          | Purpose                               |
+| ------------------------------------------------- | ------------------------------------- |
+| `thaiidcard_read_card(reader, json_opts) → char*` | Read card, returns JSON               |
+| `thaiidcard_list_readers() → char*`               | List available readers, returns JSON  |
+| `thaiidcard_free_string(ptr)`                     | Free a string returned by the library |
+
 ## Project Structure
 
 ```
@@ -337,10 +420,45 @@ CardData
     ├── go_usage.go        — Go usage example
     ├── java_usage.java    — Java usage example
     ├── kotlin_usage.kt    — Kotlin usage example
-    ├── js_usage.js        — JavaScript usage example
+    ├── js_usage.js        — JavaScript / Node.js usage example
     ├── python_usage.py    — Python usage example
     └── ruby_usage.rb      — Ruby usage example
 ```
+
+## FAQ
+
+### What is a Thai National ID smart card?
+
+A Thai National ID smart card (บัตรประจำตัวประชาชนแบบ Smart Card) is a chip-enabled identity card issued by Thailand's Department of Provincial Administration to Thai citizens. It stores personal information, a JPEG face photo, and optional NHSO insurance data, accessible via APDU commands over PC/SC.
+
+### Can I use this library without a physical card reader?
+
+No — a PC/SC-compatible smart card reader and a physical Thai National ID card are required. The library communicates with the card through the reader's hardware interface.
+
+### What programming languages can I use?
+
+The library is written in Rust but exposes a C-compatible FFI, making it callable from any language that supports FFI. Pre-built examples are available for: C, C++, Go, Java, Kotlin, JavaScript (Node.js via koffi), Python (via ctypes), and Ruby (via fiddle).
+
+### Does the library support NHSO (ประกันสุขภาพ) data?
+
+Yes. Set `Options::show_nhso_data` to `true` to read insurance scheme details, primary/secondary hospitals, coverage dates, and more.
+
+### How does the date conversion work?
+
+Thai National ID cards store dates in Buddhist calendar format (พ.ศ.). The library automatically converts all dates to Gregorian (ค.ศ.) — you will always receive dates as `YYYY-MM-DD`.
+
+### Where can I get pre-built binaries?
+
+Pre-built shared libraries for macOS, Linux, and Windows (both x86_64 and ARM64) are available on the [GitHub Releases page](https://github.com/phakhawatchu/libthai-idcard/releases/latest).
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Development priorities include:
+- Additional language bindings (Swift, C#, WASM)
+- Test coverage with card simulators
+- Documentation improvements
 
 ## References
 

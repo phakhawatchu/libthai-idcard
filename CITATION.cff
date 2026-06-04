@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use libthai-idcard in your research, please cite it as follows."
+title: "libthai-idcard: A Rust Library for Reading Thai National ID Smart Cards"
+authors:
+  - family-names: Chullamonthon
+    given-names: Phakhawat
+    email: me@phakhawat.com
+    orcid: ""
+version: 0.2.0
+date-released: 2026-06-03
+url: "https://github.com/phakhawatchu/libthai-idcard"
+repository-code: "https://github.com/phakhawatchu/libthai-idcard"
+license: ["MIT", "Apache-2.0"]
+keywords:
+  - thai
+  - national-id
+  - smart-card
+  - pcsc
+  - nhso
+  - thailand
+  - identification
+  - rust
+  - ffi
